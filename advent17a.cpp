@@ -27,6 +27,14 @@ auto print = [](const auto& v, bool nl = true)
     }
 };
 
+auto printnbr = [](const auto& mp)
+{
+    for (auto i = 0; i < mp.size(); ++i)
+    {
+        cout << std::setw(5) << i << ":" << mp[i] << endl;
+    }
+};
+
 
 StrVec readMap(const std::string& fn)
 {
@@ -167,28 +175,6 @@ int simulate(StrVec& mp, int x0, int y0)
                             }
                         }
 
-                        /*
-                        while (xx >= 0)
-                        {
-                            if (M(xx, y) == ' ' || M(xx, y) == '|' )
-                            {
-                                if (M(xx, y + 1) == '#' || M(xx, y + 1) == '~' )
-                                {
-                                    M(xx, y) = '|'; 
-                                    --xx;
-                                }
-                                else
-                                {
-                                    M(xx, y) = '|'; 
-                                    break;
-                                }
-                            }
-                            else
-                            {
-                                lb = xx + 1;
-                                break;
-                            }
-                        }*/
                     }
 
 
@@ -209,6 +195,11 @@ int simulate(StrVec& mp, int x0, int y0)
 
     } while (changed > 0);
 
+    return 0;
+}
+
+auto count = [](const auto& mp, const auto& what) 
+{
     auto cnt{0};
     auto clay{0};
     for (const auto& s : mp)
@@ -216,14 +207,14 @@ int simulate(StrVec& mp, int x0, int y0)
         clay += std::count(begin(s), end(s), '#');
         if (clay > 0)
         {
-            cnt += std::count(begin(s), end(s), '|');
-            cnt += std::count(begin(s), end(s), '~');
+            for (auto ch : what)
+            { 
+                cnt += std::count(begin(s), end(s), ch);
+            }
         }
     }
-
-
     return cnt;
-}
+};
 
 
 int main()
@@ -235,27 +226,25 @@ int main()
     s.resize(60, '-');
     cout << s << endl;
 
+#ifdef EXAMPLE
+    auto mp{readMap("example17.txt")};
+#else
     auto mp{readMap("input17.txt")};
-    //auto mp{readMap("example17.txt")};
-
+#endif
+    
     cout << mp[0].length() << "," << mp.size() << endl;
+    printnbr(mp);
 
-    //print(mp);
+#ifdef EXAMPLE
+    simulate(mp, 50, 0);
+#else
+    simulate(mp, 500, 0);
+#endif
 
-    for (auto i = 0; i < mp.size(); ++i)
-    {
-        cout << std::setw(5) << i << ":" << mp[i] << endl;
-    }
+    printnbr(mp);
 
-    //auto water{simulate(mp, 50, 0)};
-    auto water{simulate(mp, 500, 0)};
-
-    for (auto i = 0; i < mp.size(); ++i)
-    {
-        cout << std::setw(5) << i << ":" << mp[i] << endl;
-    }
-
-    cout << water << endl;
+    cout << "part1=" << count(mp, "~|") << endl;
+    cout << "part2=" << count(mp, "~") << endl;
 
     return 0;
 }
