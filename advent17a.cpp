@@ -54,15 +54,17 @@ StrVec readMap(const std::string& fn)
         {
             std::swap(ww, hh);
         }
+        ++ww; // fix for right boundary
+        bool hor_res{ww > w};
         if (hh > h)
         {
             h = hh;
             mp.resize(hh);
-            w = 0;
+            hor_res = true;
         }
-        if (ww > w)
+        if (hor_res)
         {
-            w = ww;
+            w = std::max(ww, int(w));
             for (auto &z : mp)
             {
                 z.resize(w, ' ');
@@ -87,6 +89,142 @@ StrVec readMap(const std::string& fn)
     return mp;
 }
 
+int simulate(StrVec& mp, int x0, int y0)
+{
+    mp[y0][x0] = '+';
+
+    auto w{mp[0].length()};
+    auto h{mp.size()};
+
+    int ymax = h - 1;
+
+    auto M = [&mp](auto x, auto y) -> char& { return mp[y][x]; };
+    
+    int changed(0);
+    do {
+        changed = 0;
+
+        for (auto y = ymax; y > 0 ; --y)
+        {
+            auto x{0};
+            while (x < w)
+            {
+                //if (x == x0) cout << x << "," << y << " ";
+                if ((mp[y][x] == ' ' || mp[y][x] == '.') &&
+                    (mp[y - 1][x] == '|' || mp[y - 1][x] == '+' ))
+                {
+                    mp[y][x] = '|';
+                    changed++;
+                }
+                    
+                if (M(x, y) == '|')
+                {
+                    // cout << x << "," << y << endl;
+                    if (y < h - 1 && (mp[y + 1][x] == '#' || mp[y + 1][x] == '~') )
+                    {
+                        
+                        auto findBound = [&M,w,&changed](auto x, auto y, auto d)
+                        {
+                            auto b{-1};
+                            while (x >= 0 && x < w)
+                            {
+
+                                if (M(x, y) == ' ' || M(x, y) == '|' )
+                                {
+                                    if (M(x, y + 1) == '#' || M(x, y + 1) == '~' )
+                                    {
+                                        changed += M(x, y) != '|';
+                                        M(x, y) = '|'; 
+                                        x += d;
+                                    }
+                                    else
+                                    {
+                                        changed += M(x, y) != '|';
+                                        M(x, y) = '|'; 
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    b = x;
+                                    break;
+                                }
+                            }
+
+                            return b;
+                        };
+
+                        auto lb{findBound(x - 1, y, -1)};
+                        auto rb{findBound(x + 1, y,  1)};
+
+                        //cout << lb << " " << rb << endl;
+                        if (lb >= 0 && rb >= 0)
+                        {
+                            for (auto xx = lb + 1; xx < rb; ++xx)
+                            {
+                                changed += M(x, y) != '~';
+                                M(xx, y) = '~';
+                            }
+                        }
+
+                        /*
+                        while (xx >= 0)
+                        {
+                            if (M(xx, y) == ' ' || M(xx, y) == '|' )
+                            {
+                                if (M(xx, y + 1) == '#' || M(xx, y + 1) == '~' )
+                                {
+                                    M(xx, y) = '|'; 
+                                    --xx;
+                                }
+                                else
+                                {
+                                    M(xx, y) = '|'; 
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                lb = xx + 1;
+                                break;
+                            }
+                        }*/
+                    }
+
+
+                }
+
+
+
+                ++x;
+            }
+        }
+        
+        //for (auto i = 0; i < mp.size(); ++i)
+        //{
+        //    cout << std::setw(5) << i << ":" << mp[i] << endl;
+        //}
+
+
+
+    } while (changed > 0);
+
+    auto cnt{0};
+    auto clay{0};
+    for (const auto& s : mp)
+    {
+        clay += std::count(begin(s), end(s), '#');
+        if (clay > 0)
+        {
+            cnt += std::count(begin(s), end(s), '|');
+            cnt += std::count(begin(s), end(s), '~');
+        }
+    }
+
+
+    return cnt;
+}
+
 
 int main()
 {
@@ -98,6 +236,8 @@ int main()
     cout << s << endl;
 
     auto mp{readMap("input17.txt")};
+    //auto mp{readMap("example17.txt")};
+
     cout << mp[0].length() << "," << mp.size() << endl;
 
     //print(mp);
@@ -106,6 +246,16 @@ int main()
     {
         cout << std::setw(5) << i << ":" << mp[i] << endl;
     }
+
+    //auto water{simulate(mp, 50, 0)};
+    auto water{simulate(mp, 500, 0)};
+
+    for (auto i = 0; i < mp.size(); ++i)
+    {
+        cout << std::setw(5) << i << ":" << mp[i] << endl;
+    }
+
+    cout << water << endl;
 
     return 0;
 }
