@@ -30,7 +30,17 @@ void rec(const string& s, const vector<Node>& meta, int from, string done)
             while (i >= 0);
             return;
         }
-        done += s[i];
+        
+        switch (s[i])
+        {
+            case 'N':
+            case 'E':
+            case 'S':
+            case 'W':
+                done += s[i];
+            break;
+            default: ;
+        }
 
         ++i;
     }
@@ -40,32 +50,52 @@ void rec(const string& s, const vector<Node>& meta, int from, string done)
 
 int test()
 {
-    string s{"^NNN|W|SS|EE$"};
+    //string s{"^NNN|W|SS|EE$"};
+    //string s{"^NNNEE$"};
+    //string s{"^NN(EE)SSS$"};
+    //string s{"^NN(EE|)SSS$"};
+    //string s{"^(EE|WW)(SSS|NNN)$"};
+    //string s{"^(EE(WW|SSS|(N|NN)))$"};
+    string s{"^ENWWW(NEEE|SSE(EE|N))$"};
 
     vector<Node> meta(s.length());
-    vector<Node> stack;
 
     int i{int(s.length()) - 1};
-    int epos{i};
-    int spos{-1};
+    vector<Node> stack{Node{-1, i}};
+
+    auto spos = [&stack]()->int&{ return stack.back().next_sib; };
+    auto epos = [&stack]()->int&{ return stack.back().next_end; };
 
     while (i >= 0)
     {
         if (s[i] == '^')
         {
-            if (spos != -1)
+            if (spos() != -1)
             {
-                meta[i].next_sib = spos;
+                meta[i].next_sib = spos();
             }
         } 
         else if (s[i] == '|')
         {
-            if (spos != -1)
+            if (spos() != -1)
             {
-                meta[i].next_sib = spos;
+                meta[i].next_sib = spos();
             }
-            meta[i].next_end = epos;
-            spos = i;
+            meta[i].next_end = epos();
+            spos() = i;
+        }
+        else if (s[i] == ')')
+        {
+            stack.emplace_back(Node{-1, i});
+        }
+        else if (s[i] == '(')
+        {
+            if (spos() != -1)
+            {
+                meta[i].next_sib = spos();
+            }
+            
+            stack.pop_back();
         }
         --i;
     }
