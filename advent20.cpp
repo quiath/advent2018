@@ -57,7 +57,7 @@ struct Mapper
 
     void parse(const string& news);
     void draw();
-    int bfs() const;
+    int bfs(int) const;
 };
 
 void Mapper::rec(int from, /*string done,*/ int x, int y)
@@ -333,13 +333,14 @@ void Mapper::parse(const string& news)
 
 }
 
-int Mapper::bfs() const
+int Mapper::bfs(int threshold) const
 {
     std::set<IntPair> visited{{IntPair{0, 0}}};
     std::map<IntPair, int> distance{{IntPair{0, 0}, 0}};
     std::deque<IntPair> q{IntPair{0, 0}};
 
     int maxd{0};
+    int cnt{0};
 
     while (q.size())
     {
@@ -372,12 +373,18 @@ int Mapper::bfs() const
                 visited.insert(nxy);
                 distance[nxy] = dist + 1;
                 q.emplace_back(nxy);
+                if (dist + 1 >= threshold)
+                {
+                    ++cnt;
+                }
             }
 
         }
         q.pop_front();
 
     }
+    cout << "cnt over " << threshold << ": " << cnt << endl;
+
     return maxd;
 
 }
@@ -417,7 +424,8 @@ int test()
     mapper.rec(0/*, ""*/);
     
     //mapper.iter(0, 0, 0);
-    cout << "bfs=" << mapper.bfs() << endl;
+    auto d{mapper.bfs(1000)};
+    cout << "bfs=" << d << endl;
 
 #if 0    
     vector<Node> meta(s.length());
